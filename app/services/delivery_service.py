@@ -5,14 +5,38 @@ from app.repositories.delivery_repository import (
     get_delivery_by_city,
 )
 
+CITY_ALIASES = {
+    "астана": "Astana",
+    "astana": "Astana",
 
+    "алматы": "Almaty",
+    "almaty": "Almaty",
+
+    "караганда": "Karaganda",
+    "karaganda": "Karaganda",
+
+    "шымкент": "Shymkent",
+    "shymkent": "Shymkent",
+
+    "павлодар": "Pavlodar",
+    "pavlodar": "Pavlodar",
+}
+
+
+def normalize_city(city: str) -> str:
+    cleaned = city.strip().lower()
+
+    return CITY_ALIASES.get(
+        cleaned,
+        city.strip(),
+    )
 def list_delivery_cities() -> list[dict[str, Any]]:
     return get_all_delivery_cities()
 
 
 def get_delivery_info(city: str) -> dict[str, Any]:
     delivery = get_delivery_by_city(city)
-
+    city = normalize_city(city)
     if delivery is None:
         return {
             "available": False,
