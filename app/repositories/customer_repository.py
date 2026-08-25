@@ -13,7 +13,8 @@ def get_customer_by_id(customer_id: int) -> dict[str, Any] | None:
         .execute()
     )
 
-    return response.data
+    # maybe_single().execute() returns None when no row matches.
+    return response.data if response is not None else None
 
 
 def get_customer_by_phone(phone: str) -> dict[str, Any] | None:
@@ -26,7 +27,8 @@ def get_customer_by_phone(phone: str) -> dict[str, Any] | None:
         .execute()
     )
 
-    return response.data
+    # A new customer is a valid case during order creation.
+    return response.data if response is not None else None
 
 
 def create_customer(

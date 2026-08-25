@@ -8,6 +8,50 @@ from app.services.order_service import (
 )
 
 
+def _format_price(value: int) -> str:
+    return f"{value:,}".replace(",", " ")
+
+
+def _format_order_confirmation(order: dict[str, Any]) -> str:
+    items = order["items"]
+    items_text = "\n".join(
+        "| {name} | {quantity} шт. | {_price} ₸ | {_subtotal} ₸ |".format(
+            name=item["name"],
+            quantity=item["quantity"],
+            _price=_format_price(item["price"]),
+            _subtotal=_format_price(item["subtotal"]),
+        )
+        for item in items
+    )
+
+    status_labels = {
+        "pending": "Принят автоматически, ожидает обработки",
+        "confirmed": "Подтверждён",
+        "processing": "В обработке",
+        "shipped": "Передан в доставку",
+        "completed": "Выполнен",
+        "cancelled": "Отменён",
+    }
+    status = status_labels.get(
+        order["status"],
+        order["status"],
+    )
+
+    return (
+        "Заказ успешно оформлен! 🎉\n\n"
+        "**Детали заказа:**\n\n"
+        "| Товар | Количество | Цена за шт. | Подытог |\n"
+        "| --- | ---: | ---: | ---: |\n"
+        f"{items_text}\n\n"
+        f"**Доставка ({order['city']})**: "
+        f"{_format_price(order['delivery_price'])} ₸\n"
+        f"**Итого**: **{_format_price(order['total'])} ₸**\n\n"
+        f"📦 **Статус:** {status}\n\n"
+        "Заказ зарегистрирован автоматически. "
+        "Дополнительное подтверждение не требуется."
+    )
+
+
 def create_order_tool(
     customer_name: str,
     customer_phone: str,
@@ -78,18 +122,21 @@ def create_order_tool(
             "order": None,
         }
 
+    order = {
+        "order_id": order_result["order_id"],
+        "customer_id": customer["id"],
+        "customer_name": customer["name"],
+        "customer_phone": customer["phone"],
+        "city": preview["city"],
+        "items": preview["items"],
+        "delivery_price": preview["delivery_price"],
+        "total": order_result["total"],
+        "status": order_result["status"],
+    }
+
     return {
         "success": True,
         "message": "Заказ успешно создан.",
-        "order": {
-            "order_id": order_result["order_id"],
-            "customer_id": customer["id"],
-            "customer_name": customer["name"],
-            "customer_phone": customer["phone"],
-            "city": preview["city"],
-            "items": preview["items"],
-            "delivery_price": preview["delivery_price"],
-            "total": order_result["total"],
-            "status": order_result["status"],
-        },
+        "order": order,
+        "customer_message": _format_order_confirmation(order),
     }

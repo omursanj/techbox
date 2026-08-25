@@ -322,6 +322,7 @@ def run_ai_agent(
     )
 
     created_order_id: int | None = None
+    created_order_message: str | None = None
 
     max_tool_rounds = 8
 
@@ -370,6 +371,9 @@ def run_ai_agent(
                     created_order_id = (
                         result["order"].get("order_id")
                     )
+                    created_order_message = result.get(
+                        "customer_message"
+                    )
 
             except Exception as error:
                 result = {
@@ -390,6 +394,12 @@ def run_ai_agent(
                     ),
                 }
             )
+
+        if created_order_message:
+            return {
+                "message": created_order_message,
+                "order_id": created_order_id,
+            }
 
     return {
         "message": (
