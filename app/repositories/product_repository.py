@@ -1,6 +1,46 @@
+import re
 from typing import Any
 
 from app.database import supabase
+
+
+def _get_search_terms(query: str) -> list[str]:
+    return re.findall(
+        r"\w+",
+        query.casefold(),
+        flags=re.UNICODE,
+    )
+
+
+def _product_matches_query(
+    product: dict[str, Any],
+    search_terms: list[str],
+) -> bool:
+    searchable_values = [
+        product.get("name", ""),
+        product.get("brand", ""),
+        product.get("description", ""),
+        product.get("category", ""),
+    ]
+
+    specifications = product.get("specifications") or {}
+
+    if isinstance(specifications, dict):
+        searchable_values.extend(
+            f"{key} {value}"
+            for key, value in specifications.items()
+        )
+
+    searchable_text = " ".join(
+        str(value).casefold()
+        for value in searchable_values
+        if value is not None
+    )
+
+    return all(
+        term in searchable_text
+        for term in search_terms
+    )
 
 
 def get_all_products() -> list[dict[str, Any]]:
@@ -53,13 +93,6 @@ def search_products(
 ) -> list[dict[str, Any]]:
     request = supabase.table("products").select("*")
 
-    if query:
-        request = request.or_(
-            f"name.ilike.%{query}%,"
-            f"brand.ilike.%{query}%,"
-            f"description.ilike.%{query}%"
-        )
-
     if category:
         request = request.ilike("category", category)
 
@@ -78,7 +111,21 @@ def search_products(
         .execute()
     )
 
-    return response.data or []
+    products = response.data or []
+
+    if not query:
+        return products
+
+    search_terms = _get_search_terms(query)
+
+    if not search_terms:
+        return products
+
+    return [
+        product
+        for product in products
+        if _product_matches_query(product, search_terms)
+    ]
 
 
 def get_product_stock(product_id: int) -> int | None:

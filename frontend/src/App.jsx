@@ -47,13 +47,16 @@ function App() {
     try {
       setLoading(true);
 
-      if (!search.trim()) {
+      const query = search.trim().replace(/\s+/g, " ");
+      setSearch(query);
+
+      if (!query) {
         await loadProducts();
         return;
       }
 
       const response = await fetch(
-        `${API_URL}/products/search?query=${encodeURIComponent(search)}`
+        `${API_URL}/products/search?query=${encodeURIComponent(query)}`
       );
 
       if (!response.ok) {
@@ -185,6 +188,10 @@ function App() {
           {loading ? (
             <p className="status-text">
               Загружаем товары...
+            </p>
+          ) : products.length === 0 ? (
+            <p className="status-text">
+              По запросу «{search}» товары не найдены.
             </p>
           ) : (
             <div className="products-grid">
