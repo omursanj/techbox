@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Any
 
 from openai import OpenAI
@@ -21,6 +22,15 @@ client = OpenAI(
 )
 
 
+def normalize_currency_in_response(content: str) -> str:
+    """Гарантирует, что AI не вернёт российское обозначение валюты."""
+    return re.sub(
+        r"(?iu)(?<!\w)(?:₽|руб(?:\.|ль|ля|лей|лях|лями)?)(?!\w)",
+        "₸",
+        content,
+    )
+
+
 TOOLS = [
     {
         "type": "function",
@@ -29,7 +39,7 @@ TOOLS = [
             "description": (
                 "Ищет товары в каталоге TechBox по названию, "
                 "модели, бренду, категории, цене и наличию. Поддерживает "
-                "неполное название модели."
+                "неполное название модели. Все цены указаны в тенге (₸)."
             ),
             "parameters": {
                 "type": "object",
@@ -161,7 +171,7 @@ TOOLS = [
             "name": "check_delivery",
             "description": (
                 "Проверяет доступность и стоимость доставки "
-                "TechBox в указанный город."
+                "TechBox в указанный город. Стоимость указана в тенге (₸)."
             ),
             "parameters": {
                 "type": "object",
@@ -377,7 +387,9 @@ def run_ai_agent(
 
         if not tool_calls:
             return {
-                "message": assistant_message.content or "",
+                "message": normalize_currency_in_response(
+                    assistant_message.content or ""
+                ),
                 "order_id": created_order_id,
             }
 
