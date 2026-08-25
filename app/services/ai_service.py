@@ -12,6 +12,7 @@ from app.tools.compare_products import compare_products_tool
 from app.tools.check_stock import check_stock_tool
 from app.tools.check_delivery import check_delivery_tool
 from app.tools.create_order import create_order_tool
+from app.tools.check_order_status import check_order_status_tool
 
 
 client = OpenAI(
@@ -55,6 +56,27 @@ TOOLS = [
                     "max_price",
                     "in_stock_only",
                 ],
+                "additionalProperties": False,
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "check_order_status",
+            "description": (
+                "Получает текущий статус уже созданного заказа "
+                "TechBox по его номеру."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "order_id": {
+                        "type": "integer",
+                        "minimum": 1,
+                    },
+                },
+                "required": ["order_id"],
                 "additionalProperties": False,
             },
         },
@@ -242,6 +264,11 @@ def execute_tool(
     if tool_name == "check_delivery":
         return check_delivery_tool(
             city=arguments["city"],
+        )
+
+    if tool_name == "check_order_status":
+        return check_order_status_tool(
+            order_id=arguments["order_id"],
         )
 
     if tool_name == "create_order":
