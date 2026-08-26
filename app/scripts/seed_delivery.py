@@ -3,29 +3,29 @@ from app.database import supabase
 
 DELIVERY_CITIES = [
     {
-        "city": "Astana",
+        "city": "Астана",
         "delivery_price": 2000,
         "is_available": True,
     },
     {
-        "city": "Almaty",
+        "city": "Алматы",
         "delivery_price": 2500,
         "is_available": True,
     },
     {
-        "city": "Karaganda",
+        "city": "Караганда",
         "delivery_price": 2500,
         "is_available": True,
     },
     {
-        "city": "Shymkent",
+        "city": "Шымкент",
         "delivery_price": 3000,
         "is_available": True,
     },
     {
-        "city": "Pavlodar",
+        "city": "Павлодар",
         "delivery_price": 3000,
-        "is_available": False,
+        "is_available": True,
     },
 ]
 
